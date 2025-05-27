@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Money's Bar - P2P Card Game</title>
+    <title>E-Money's Bar 1.1</title>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -628,7 +628,7 @@
 <body>
     <div id="app-container">
         <div id="connection-setup">
-            <h2>E-Money's Bar</h2>
+            <h2>E-Money's Bar 1.1</h2>
             <input type="text" id="playerNameInput" placeholder="Enter Your Name (Min 3 chars)" value="">
             <div>
                 <button id="createRoomBtn">Create Room</button>
@@ -1794,7 +1794,7 @@
             
             window.addEventListener('beforeunload',()=>{if(localPlayer.isHost&&gameState.gamePhase!=='lobby'&&Object.keys(dataChannels).length>0)sendMessage('HOST_DISCONNECTED',{message:"Host has left the page."});Object.values(peerConnections).forEach(pc=>{if(pc?.close)pc.close();});if(clientToServerPc?.close)clientToServerPc.close();}); 
             showConnectionSetup(); 
-            logDebug("E-Money's Bar P2P Card Game initialized.");
+            logDebug("E-Money's Bar initialized.");
         }
         document.addEventListener('DOMContentLoaded', init);
     </script>
