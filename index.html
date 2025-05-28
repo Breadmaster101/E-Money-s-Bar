@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Money's Bar 1.1</title>
+    <title>E-Money's Bar 1.2</title>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         :root {
             --primary-bg: #1A222C; 
@@ -157,7 +158,6 @@
         /* Connection Setup Screen */
         #connection-setup { padding: 35px; text-align: center; overflow-y: auto; height: 100%; display: flex; flex-direction: column; align-items: center; background-color: var(--primary-bg); }
         #connection-setup h2 { color: var(--primary-text); margin-bottom: 30px; font-size: 2.8em; font-weight: 700; font-family: var(--font-family-serif); text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-        /* #connection-setup > input[type="text"] - covered by general input rule for centering */
         #connection-setup > div:first-of-type { margin-bottom: 20px; } /* Button group container */
         .setup-section { background-color: var(--secondary-bg); padding: 30px; margin-top: 30px; border-radius: var(--border-radius); box-shadow: inset 0 3px 6px rgba(0,0,0,0.2), var(--box-shadow-light); width: 100%; max-width: 750px; box-sizing: border-box; border: 1px solid var(--tertiary-bg); }
         .setup-section h3 { color: var(--accent-gold); margin-top: 0; margin-bottom: 25px; font-size: 1.8em; border-bottom: 2px solid var(--accent-gold-darker); padding-bottom: 12px; font-family: var(--font-family-serif); }
@@ -167,99 +167,60 @@
         #connected-players-list span { display: block; margin-bottom: 6px; padding: 8px 10px; background-color: rgba(255,255,255,0.05); border-radius: 4px; border-left: 3px solid var(--accent-gold); }
         #startGameBtn { background-color: var(--accent-green); color: white; margin-top: 25px; padding: 15px 30px; font-size: 1.2em;}
         #startGameBtn:hover { background-color: var(--accent-green-darker); }
-        .connection-slot { background-color: var(--primary-bg); padding: 20px; margin: 20px auto; border-radius: var(--border-radius); border: 2px solid #4a6075; max-width: 100%; /* Host slot itself is already centered by parent's align-items or its own margin: auto */ transition: border-color 0.3s ease, background-color 0.3s ease; box-shadow: var(--box-shadow-light); }
-        .connection-slot.connected { border-color: var(--accent-green) !important; background-color: var(--table-green-light) !important; }
-        .connection-slot p { margin: 10px 0 8px; font-weight: 500; font-size: 1.05em; color: var(--secondary-text); }
-        .connection-slot button { margin-top: 12px; font-size: 0.95em;} /* Host slot's "Process Answer" button */
-        #client-status { margin-top: 20px; font-weight: bold; font-size: 1.1em; padding: 10px; border-radius: var(--border-radius); background-color: rgba(0,0,0,0.1); }
         
-        /* Debug Log styles */
-        #debug-log { margin-top: 35px; background: var(--tertiary-bg); padding: 18px; border-radius: var(--border-radius); max-height: 180px; overflow-y: auto; font-size: 0.9em; text-align: left; width: 100%; max-width: 750px; box-sizing: border-box; border: 1px solid #4a6075; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); margin-left: auto; margin-right: auto; /* Ensure debug log also centers */ }
-        #debug-log strong { color: var(--accent-highlight); display: block; margin-bottom: 8px; font-size: 1.1em; font-family: var(--font-family-serif); }
-        #debug-log p { margin: 3px 0; line-height: 1.5; color: var(--secondary-text); }
-        #debug-log p:nth-child(odd) { background-color: rgba(255,255,255,0.03); }
-
-
-        /* STYLES FOR TEXTAREA WITH INTERNAL BUTTON */
-        .textarea-container-visual {
-            position: relative;
-            display: block; 
-            box-sizing: border-box;
+        .room-code-container {
+            display: flex;
+            align-items: center;
+            justify-content: center; 
+            gap: 10px;
+            margin: 15px auto;
+            max-width: 90%;
+        }
+        #roomCodeDisplay { 
+            flex-grow: 1;
+            background-color: var(--primary-bg); 
+            padding: 15px 20px; 
+            border-radius: var(--border-radius); 
+            border: 2px solid var(--accent-gold);
+            word-break: break-all;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: var(--accent-highlight);
+            text-align: left;
+        }
+        .copy-btn-beside {
+            padding: 10px 15px; 
+            font-size: 1em;  
+            background-color: var(--secondary-text);
+            color: var(--primary-bg);
             border-radius: var(--border-radius);
-            
-            width: 100%; /* Takes full width of its parent slot within setup-section */
-            max-width: 500px; /* But not more than 500px */
-            margin: 10px auto; /* Centering for the visual container */
-        }
-        
-        #client-controls .textarea-container-visual {
-             background-color: var(--input-bg);
-             border: 1px solid var(--input-border);
-             min-height: 80px; 
-             margin-bottom: 15px; 
-        }
-
-        .connection-slot .textarea-container-visual { /* For host offers */
-            background-color: var(--tertiary-bg);
-            border: 1px solid #4a6075; 
-            /* width: 100%; is inherited */
-            /* max-width: 500px; is inherited */
-            /* margin: 10px auto; is inherited */
-            margin-bottom: 10px; 
-            min-height: 65px; 
-        }
-        
-        .textarea-container-visual > textarea {
-            width: 100%;
-            height: 100%; 
-            min-height: calc(100% - 2px); 
-            box-sizing: border-box;
             border: none;
-            background: transparent;
-            outline: none;
-            box-shadow: none;
-            resize: vertical;
-            font-family: var(--font-family);
-            padding: 10px 45px 10px 10px; /* Top, Right (for button), Bottom, Left */
-        }
-
-        #client-controls .textarea-container-visual > textarea {
-            color: var(--input-text);
-            font-size: 1em;
-        }
-        
-        .connection-slot .textarea-container-visual > textarea {
-            color: var(--primary-text);
-            font-size: 0.9em;
-        }
-
-        .textarea-container-visual > .copy-btn-internal {
-            position: absolute;
-            top: 6px;      
-            right: 6px;     
-            padding: 4px 8px; 
-            font-size: 0.8em; 
-            background-color: #4A5568; 
-            color: var(--primary-text); 
-            border: 1px solid #2D3748; 
-            border-radius: 4px; 
             cursor: pointer;
-            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-            z-index: 5; 
-            line-height: 1; 
+            transition: background-color 0.2s;
+            min-width: auto; 
+            width: auto;
+            text-transform: uppercase; 
+            letter-spacing: 0.8px; 
+            font-weight: 600; 
         }
-        .textarea-container-visual > .copy-btn-internal:hover {
-            background-color: #2D3748; 
-            color: var(--accent-gold); 
-            border-color: var(--accent-gold-darker);
+        .copy-btn-beside:hover {
+            background-color: var(--accent-gold);
         }
-        .textarea-container-visual > .copy-btn-internal:disabled { 
+        .copy-btn-beside:disabled { 
             background-color: var(--accent-green-darker);
             color: white;
             cursor: default;
-            border-color: var(--accent-green); 
         }
 
+
+        #client-status { margin-top: 20px; font-weight: bold; font-size: 1.1em; padding: 10px; border-radius: var(--border-radius); background-color: rgba(0,0,0,0.1); }
+        #connectToHostBtn { margin-top: 15px; } 
+        
+        /* Debug Log styles */
+        #debug-log { margin-top: 35px; background: var(--tertiary-bg); padding: 18px; border-radius: var(--border-radius); max-height: 180px; overflow-y: auto; font-size: 0.9em; text-align: left; width: 100%; max-width: 750px; box-sizing: border-box; border: 1px solid #4a6075; box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); margin-left: auto; margin-right: auto; }
+        #debug-log strong { color: var(--accent-highlight); display: block; margin-bottom: 8px; font-size: 1.1em; font-family: var(--font-family-serif); }
+        #debug-log p { margin: 3px 0; line-height: 1.5; color: var(--secondary-text); }
+        #debug-log p:nth-child(odd) { background-color: rgba(255,255,255,0.03); }
 
         /* Game Board */
         #game-board { 
@@ -628,32 +589,30 @@
 <body>
     <div id="app-container">
         <div id="connection-setup">
-            <h2>E-Money's Bar 1.1</h2>
+            <h2>E-Money's Bar 1.2</h2>
             <input type="text" id="playerNameInput" placeholder="Enter Your Name (Min 3 chars)" value="">
             <div>
                 <button id="createRoomBtn">Create Room</button>
                 <button id="joinRoomBtn">Join Room</button>
             </div>
+
             <div id="host-controls" class="setup-section" style="display:none;">
                 <h3>Host Controls</h3>
-                <p>Share your Host Offers with joining players one by one. Paste their Answers back.</p>
-                <div id="host-connection-slots"></div>
-                <p><strong>Connected Players:</strong> <span id="connected-players-count">0</span></p>
+                <p>Your Room Code is (share with players):</p>
+                <div class="room-code-container">
+                    <span id="roomCodeDisplay">Waiting for Room Code...</span>
+                    <button id="copyRoomCodeBtn" class="copy-btn-beside" title="Copy Room Code">COPY</button>
+                </div>
+                <p><strong>Connected Players:</strong> <span id="connected-players-count">0 / 3</span></p>
                 <div id="connected-players-list"></div>
                 <button id="startGameBtn" disabled>Start Game (2-4 Players)</button>
             </div>
+
             <div id="client-controls" class="setup-section" style="display:none;">
                 <h3>Join Room</h3>
-                <p><strong>1. Paste Host's Offer for you:</strong></p>
-                <textarea id="hostOfferInput" placeholder="Paste Host's Offer SDP here"></textarea>
-                <p><strong>2. Click to generate your Answer:</strong></p>
-                <button id="generateAnswerBtn">Generate Answer</button>
-                <p><strong>3. Copy your Answer and give it to the Host:</strong></p>
-                <div class="textarea-container-visual"> 
-                    <textarea id="clientAnswerOutput" readonly placeholder="Your Answer SDP will appear here"></textarea>
-                    <button id="copyClientAnswerBtn" class="copy-btn-internal" type="button" title="Copy Answer">COPY</button>
-                </div>
-                <p id="client-status"></p>
+                <input type="text" id="roomCodeInput" placeholder="Enter Host's Room Code">
+                <button id="connectToHostBtn">Connect to Host</button>
+                <p id="client-status">Enter your name above, then the Room Code from the host and click "Connect to Host".</p>
             </div>
              <div id="debug-log"><strong>Debug Log:</strong></div>
         </div>
@@ -729,10 +688,10 @@
         const $ = (s) => document.querySelector(s);
         const appContainer = $('#app-container'); const connectionSetupDiv = $('#connection-setup'); const gameBoardDiv = $('#game-board');
         const playerNameInput = $('#playerNameInput'); const createRoomBtn = $('#createRoomBtn'); const joinRoomBtn = $('#joinRoomBtn');
-        const hostControlsDiv = $('#host-controls');  const hostConnectionSlotsDiv = $('#host-connection-slots');
+        const hostControlsDiv = $('#host-controls'); const roomCodeDisplay = $('#roomCodeDisplay'); const copyRoomCodeBtn = $('#copyRoomCodeBtn');
         const connectedPlayersCountSpan = $('#connected-players-count'); const connectedPlayersListDiv = $('#connected-players-list'); const startGameBtn = $('#startGameBtn');
-        const clientControlsDiv = $('#client-controls'); const hostOfferInput = $('#hostOfferInput');
-        const generateAnswerBtn = $('#generateAnswerBtn'); const clientAnswerOutput = $('#clientAnswerOutput'); const clientStatusP = $('#client-status');
+        const clientControlsDiv = $('#client-controls'); const roomCodeInput = $('#roomCodeInput'); const connectToHostBtn = $('#connectToHostBtn');
+        const clientStatusP = $('#client-status');
         const debugLogDiv = $('#debug-log');
         const playerAreasContainer = $('#player-areas-container');
         const centerPileVisualStack = $('#center-pile-visual .card-stack');
@@ -762,53 +721,31 @@
         const rematchStatusListDiv = $('#rematch-status-list');
         const playAgainBtn = $('#playAgainBtn'); const exitGameBtn = $('#exitGameBtn');
         
-        let localPlayer = { id: null, name: "", isHost: false, hand: [], eliminated: false, revolverDeck: [], revolverChambersLeft: REVOLVER_CHAMBERS, cardCount: 0, readyForRematch: false };
-        let gameState = { players: [], liarsDeck: [], tableDeck: [], centerPile: [], currentPlayerId: null, currentTableSuit: null, lastPlayedTurn: null, gamePhase: 'lobby', roomName: null, config: { handSize: HAND_SIZE }, centerPileCardCount: 0, rematchReadyStatus: {} };
-        const STUN_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-        let peerConnections = {}; let clientToServerPc = null; let dataChannels = {}; let clientToServerDc = null; let hostOfferInputs = {};
+        let localPlayer = { id: null, name: "", peer: null, isHost: false, hand: [], eliminated: false, revolverDeck: [], revolverChambersLeft: REVOLVER_CHAMBERS, cardCount: 0, readyForRematch: false };
+        let gameState = { players: [], liarsDeck: [], tableDeck: [], centerPile: [], currentPlayerId: null, currentTableSuit: null, lastPlayedTurn: null, gamePhase: 'lobby', config: { handSize: HAND_SIZE }, centerPileCardCount: 0, rematchReadyStatus: {} };
+        
+        let hostConnections = {}; 
+        let clientConnectionToHost = null; 
+
         let selectedCardsForPlayUI = []; 
         let lastLoggedGameStateForClient = {}; 
         let rouletteSymbolInterval = null;
 
         function copyToClipboard(text, buttonElement) {
-            if (!text || text.trim() === "" || text.startsWith("Generating...") || text.startsWith("Error")) {
+            if (!text || text.trim() === "" || text.startsWith("Waiting")) {
                 alert("No valid content to copy yet.");
-                return;
-            }
-            if (!navigator.clipboard) {
-                // Fallback for older browsers
-                const textArea = document.createElement("textarea");
-                textArea.value = text;
-                textArea.style.position = "fixed"; 
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    if (buttonElement) {
-                        const originalText = buttonElement.textContent;
-                        buttonElement.textContent = 'Copied!';
-                        buttonElement.disabled = true;
-                        setTimeout(() => {
-                            buttonElement.textContent = originalText;
-                            buttonElement.disabled = false;
-                        }, 1500);
-                    }
-                    logDebug('Content copied to clipboard (fallback).');
-                } catch (err) {
-                    logDebug('Fallback: Oops, unable to copy', err);
-                    alert('Failed to copy text using fallback.');
-                }
-                document.body.removeChild(textArea);
                 return;
             }
             navigator.clipboard.writeText(text).then(() => {
                 if (buttonElement) {
-                    const originalText = buttonElement.textContent;
-                    buttonElement.textContent = 'Copied!';
+                    const originalText = buttonElement.textContent; 
+                    const originalTitle = buttonElement.title;
+                    buttonElement.textContent = 'Copied!'; 
+                    buttonElement.title = 'Copied!';
                     buttonElement.disabled = true;
                     setTimeout(() => {
-                        buttonElement.textContent = originalText;
+                        buttonElement.textContent = originalText; 
+                        buttonElement.title = originalTitle;
                         buttonElement.disabled = false;
                     }, 1500);
                 }
@@ -832,7 +769,6 @@
         }
 
         function toggleModal(modalElement, show) { if (show) { modalElement.style.display = 'flex'; setTimeout(() => modalElement.classList.add('visible'), 10); } else { modalElement.classList.remove('visible'); setTimeout(() => modalElement.style.display = 'none', 300);}}
-        function generateId(prefix = '') { return prefix + Math.random().toString(36).substr(2, 9); }
         function logDebug(message) { console.log(message); const p = document.createElement('p'); p.textContent = `[${new Date().toLocaleTimeString()}] ${typeof message === 'object' ? JSON.stringify(message) : message}`; debugLogDiv.appendChild(p); debugLogDiv.scrollTop = debugLogDiv.scrollHeight; }
         
         function addLogMessage(message, type = "info") { 
@@ -891,7 +827,7 @@
             const opponents = viewPlayers.filter(p => p.id !== localPlayer.id);
             const numOpponents = opponents.length;
 
-            if (numOpponents === 0) return;
+            if (numOpponents === 0 && gameState.players.length <=1) return; 
 
             const gameBoardPadding = parseFloat(getComputedStyle(gameBoardDiv).paddingTop) || 20; 
             let playerAreaWidthEstimate = 200; 
@@ -911,8 +847,8 @@
             if (!gameBoardDiv || !centerTableEl) {
                 logDebug("Board or center table not found for dynamic positioning - using fallback.");
                 const fallbackPositions = window.innerWidth <= 768 ? 
-                    [ { top: '4%', left: '50%', translateX: '-50%', translateY: '-50%'}, { top: '30%', left: '10%', translateX: '0%', translateY: '-50%'}, { top: '30%', right: '10%', translateX: '0%', translateY: '-50%'} ] : // Adjusted top player fallback
-                    [ { top: '4%', left: '50%', translateX: '-50%', translateY: '-50%'}, { top: '50%', left: '15%', translateX: '0%', translateY: '-50%'}, { top: '50%', right: '15%', translateX: '0%', translateY: '-50%'} ]; // Adjusted top player fallback
+                    [ { top: '4%', left: '50%', translateX: '-50%', translateY: '-50%'}, { top: '30%', left: '10%', translateX: '0%', translateY: '-50%'}, { top: '30%', right: '10%', translateX: '0%', translateY: '-50%'} ] : 
+                    [ { top: '4%', left: '50%', translateX: '-50%', translateY: '-50%'}, { top: '50%', left: '15%', translateX: '0%', translateY: '-50%'}, { top: '50%', right: '15%', translateX: '0%', translateY: '-50%'} ]; 
                 
                 opponents.forEach((opponent, idx) => {
                     const pa = document.createElement('div');
@@ -929,42 +865,28 @@
             const gbRect = gameBoardDiv.getBoundingClientRect();
             const ctRect = centerTableEl.getBoundingClientRect();
             
-            // Y=0 for player-areas-container content (top of game board padding)
             const containerContentTopYAbsolute = gbRect.top + gameBoardPadding; 
             const containerContentLeftXAbsolute = gbRect.left + gameBoardPadding;
 
-            // Top of the zone is the top of the game board's content area
             const zoneTopAbsoluteY = containerContentTopYAbsolute;
-            // Bottom of the zone is the top of the center table
             const zoneBottomAbsoluteY = ctRect.top;
             const verticalZoneHeight = zoneBottomAbsoluteY - zoneTopAbsoluteY;
 
-            let topPlayerCenterCssTopVal; // This will be the CSS 'top' (for the center of the PA) relative to player-areas-container's padded edge
-            const MIN_TOP_EDGE_GAP = 15; // Minimum gap from the top content edge to the player area's top edge.
+            let topPlayerCenterCssTopVal; 
+            const MIN_TOP_EDGE_GAP = 15; 
 
-            // Ideal Y-coordinate for the center of the top player area, relative to the start of the vertical zone.
-            // This aims to place the center of the player area at the center of the verticalZoneHeight.
             const idealCenterInZoneRelative = verticalZoneHeight / 2;
-
-            // Ensure the top edge of the player area maintains MIN_TOP_EDGE_GAP
-            // minCenterRequired is the 'top' value needed if the player area's top edge is at MIN_TOP_EDGE_GAP
             const minCenterRequired = MIN_TOP_EDGE_GAP + (playerAreaHeightEstimate / 2);
 
             if (verticalZoneHeight < (playerAreaHeightEstimate + 2 * MIN_TOP_EDGE_GAP) ) {
-                // Not enough space to center ideally while maintaining min gaps.
-                // Prioritize the MIN_TOP_EDGE_GAP.
                 topPlayerCenterCssTopVal = minCenterRequired;
             } else {
-                // Enough space, use the ideal centering.
                 topPlayerCenterCssTopVal = idealCenterInZoneRelative;
-                 // Double check it's not less than minCenterRequired (it shouldn't be if logic above is correct)
                 topPlayerCenterCssTopVal = Math.max(minCenterRequired, topPlayerCenterCssTopVal);
             }
             
-            // For side players, their horizontal gap from the table should be consistent.
-            // Calculate the actual gap achieved above the top player.
             const actualTopGap = topPlayerCenterCssTopVal - (playerAreaHeightEstimate / 2);
-            const MIN_SIDE_GAP = 20; // Minimum horizontal gap for side players.
+            const MIN_SIDE_GAP = 20; 
             let sidePlayerHorizontalGap = Math.max(MIN_SIDE_GAP, actualTopGap);
             
             const ctLeftRel = ctRect.left - containerContentLeftXAbsolute;
@@ -979,30 +901,30 @@
                     rotate: '0deg'
                 });
             } else if (numOpponents === 2) { 
-                layoutSlots.push({ // Top player
+                layoutSlots.push({ 
                     top: `${topPlayerCenterCssTopVal}px`, left: '50%',
                     translateX: '-50%', translateY: '-50%', 
                     rotate: '0deg'
                 });
-                layoutSlots.push({ // Left side player
+                layoutSlots.push({ 
                     top: `50%`, 
                     left: `${ctLeftRel - sidePlayerHorizontalGap - playerAreaWidthEstimate}px`,
                     translateX: '0%', translateY: '-50%', 
                     rotate: '0deg'
                 });
             } else if (numOpponents === 3) { 
-                 layoutSlots.push({ // Left side player
+                 layoutSlots.push({ 
                     top: `50%`,
                     left: `${ctLeftRel - sidePlayerHorizontalGap - playerAreaWidthEstimate}px`,
                     translateX: '0%', translateY: '-50%', 
                     rotate: '0deg'
                 });
-                layoutSlots.push({ // Top player
+                layoutSlots.push({ 
                     top: `${topPlayerCenterCssTopVal}px`, left: '50%',
                     translateX: '-50%', translateY: '-50%', 
                     rotate: '0deg'
                 });
-                layoutSlots.push({ // Right side player
+                layoutSlots.push({ 
                     top: `50%`,
                     left: `${ctRightRel + sidePlayerHorizontalGap}px`, 
                     translateX: '0%', translateY: '-50%', 
@@ -1198,20 +1120,37 @@
             }, { once: true });
         }
 
-
         function updateActionButtons() { const amICurrentPlayer = gameState.currentPlayerId === localPlayer.id; const localPlayerData = gameState.players.find(p => p.id === localPlayer.id); const amEliminated = localPlayerData ? localPlayerData.eliminated : true; playCardsBtn.disabled = !amICurrentPlayer || amEliminated || gameState.gamePhase !== 'playing' || playConfirmArea.style.display === 'block'; callLiarBtn.disabled = !amICurrentPlayer || amEliminated || gameState.gamePhase !== 'playing' || !gameState.lastPlayedTurn || playConfirmArea.style.display === 'block'; if (amICurrentPlayer && !amEliminated) { playerHandArea.classList.add('current-player-hand'); } else { playerHandArea.classList.remove('current-player-hand');}}
         class LiarsDeckGameManager { static shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]]; }} static createLiarsDeck() { const d = []; SUITS.forEach(s => { RANKS.forEach(r => { d.push({ rank:r, suit:s, id: `${r}${s}` }); }); }); this.shuffleArray(d); return d;} static createTableDeck() { const sS=[...SUITS]; this.shuffleArray(sS); return sS;} static createRevolverDeck(){const d=[];for(let i=0;i<REVOLVER_CHAMBERS-REVOLVER_BULLETS;i++)d.push('blank');for(let i=0;i<REVOLVER_BULLETS;i++)d.push('lethal');this.shuffleArray(d);return d;} static dealCardsFromLiarsDeck(pl,dk,hs){pl.forEach(p=>{if(!p.eliminated){p.hand=[];for(let i=0;i<hs;i++)if(dk.length>0)p.hand.push(dk.pop());}else p.hand=[];p.cardCount=p.hand.length;});} static checkPlayedCardsTruth(pc,ts){if(!pc||pc.length===0)return true;for(const c of pc)if(c.suit!==ts)return false;return true;}}
-        function sendMessage(type, payload, targetClientId = null) { const msg = JSON.stringify({ type, payload, senderId: localPlayer.id }); if (localPlayer.isHost) { if (targetClientId) { if (dataChannels[targetClientId]?.readyState === 'open') dataChannels[targetClientId].send(msg); else logDebug(`Host: DC to ${targetClientId} not open.`); } else Object.values(dataChannels).forEach(dc => { if (dc.readyState === 'open') dc.send(msg); }); } else if (clientToServerDc?.readyState === 'open') clientToServerDc.send(msg); else logDebug("Client: DC to host not open."); }
+        
+        function sendMessage(type, payload, targetClientId = null) { 
+            const msgObject = { type, payload, senderId: localPlayer.id }; // Send object directly
+            if (localPlayer.isHost) { 
+                if (targetClientId) { 
+                    if (hostConnections[targetClientId]?.open) hostConnections[targetClientId].send(msgObject); 
+                    else logDebug(`Host: Connection to ${targetClientId} not open or found.`); 
+                } else {
+                    Object.values(hostConnections).forEach(conn => { if (conn?.open) conn.send(msgObject); }); 
+                }
+            } else if (clientConnectionToHost?.open) {
+                clientConnectionToHost.send(msgObject); 
+            } else {
+                logDebug("Client: Connection to host not open."); 
+            }
+        }
         
         function getConnectedAndActivePlayerIds() {
-            const connectedClientIds = Object.keys(dataChannels).filter(id => dataChannels[id]?.readyState === 'open');
-            const allPotentiallyActiveIds = [localPlayer.id, ...connectedClientIds];
-            // Ensure they were part of the current game (important for rematch eligibility after players might have left and rejoined setup)
-            return allPotentiallyActiveIds.filter(id => gameState.players.some(p => p.id === id));
+            let connectedIds = [];
+            if (localPlayer.isHost) {
+                connectedIds = [localPlayer.id, ...Object.keys(hostConnections).filter(id => hostConnections[id]?.open)];
+            } else { 
+                connectedIds = clientConnectionToHost?.open ? [localPlayer.id, clientConnectionToHost.peer] : [localPlayer.id];
+            }
+            return connectedIds.filter(id => gameState.players.some(p => p.id === id));
         }
 
-        function handleIncomingMessage(event) {
-            const msg = JSON.parse(event.data);
+        function handleIncomingMessage(data) { // data is now the actual object from PeerJS
+            const msg = data; 
             logDebug(`Received: ${msg.type} from ${msg.senderId === localPlayer.id ? 'Self' : (gameState.players.find(p=>p.id === msg.senderId)?.name || msg.senderId )}`);
             const oldGameStateForLog = localPlayer.isHost ? null : JSON.parse(JSON.stringify(lastLoggedGameStateForClient)); 
 
@@ -1226,19 +1165,18 @@
                             const clientName = clientPlayer ? clientPlayer.name : clientId;
 
                             const eligiblePlayers = getConnectedAndActivePlayerIds();
-                            // Ensure this client is still considered eligible for rematch
                             if (!eligiblePlayers.includes(clientId)) {
-                                logDebug(`Host: Received rematch ready from ${clientName} but they are no longer eligible (e.g. disconnected). Ignoring.`);
+                                logDebug(`Host: Received rematch ready from ${clientName} but they are no longer eligible. Ignoring.`);
                                 if (gameState.rematchReadyStatus.hasOwnProperty(clientId)) {
                                     delete gameState.rematchReadyStatus[clientId];
-                                    broadcastGameState(); // Update clients about the voided vote
+                                    broadcastGameState(); 
                                 }
                                 return;
                             }
 
                             gameState.rematchReadyStatus[clientId] = msg.payload.isReady;
                             logDebug(`Host: Player ${clientName} readiness: ${msg.payload.isReady}`);
-                            updateRematchStatusDisplay(); // Host updates its own display
+                            updateRematchStatusDisplay(); 
 
                             const allActuallyReady = eligiblePlayers.length > 0 &&
                                                      eligiblePlayers.every(id => gameState.rematchReadyStatus[id] === true);
@@ -1247,30 +1185,38 @@
                                 addLogMessage("All players ready! Starting rematch...", "success");
                                 initializeNewGame(); 
                             } else {
-                                broadcastGameState(); // Broadcast updated rematch statuses
+                                broadcastGameState(); 
                             }
                         }
                         break;
-                    case 'CLIENT_NAME_UPDATE': const pToUpdate = gameState.players.find(p => p.id === msg.senderId); if (pToUpdate) { pToUpdate.name = msg.payload.name; logDebug(`Host: Player ${msg.senderId} updated name to ${msg.payload.name}.`); updateConnectedPlayersDisplay(); broadcastGameState(); } break;
+                    case 'CLIENT_NAME_UPDATE': 
+                        const pToUpdate = gameState.players.find(p => p.id === msg.senderId); 
+                        if (pToUpdate) { 
+                            pToUpdate.name = msg.payload.name; 
+                            logDebug(`Host: Player ${msg.senderId} updated name to ${msg.payload.name}.`); 
+                            updateConnectedPlayersDisplay(); 
+                            broadcastGameState(); 
+                        } else {
+                            logDebug(`Host: Received CLIENT_NAME_UPDATE for unknown peerId ${msg.senderId}`);
+                        }
+                        break;
                 }
             } else { // Client-side
                 switch (msg.type) {
                     case 'GAME_STATE_UPDATE':
-                        const oldPhase = lastLoggedGameStateForClient?.gamePhase; // Get phase before update
+                        const oldPhase = lastLoggedGameStateForClient?.gamePhase; 
                         const wasGameOver = oldPhase === 'game_over';
 
-                        // Update local game state and player object
                         Object.assign(gameState, msg.payload.gameState);
                         localPlayer.hand = msg.payload.yourHand !== undefined ? msg.payload.yourHand : localPlayer.hand;
                         const myPlayerDataFromState = gameState.players.find(p => p.id === localPlayer.id);
                         if (myPlayerDataFromState) { Object.assign(localPlayer, myPlayerDataFromState); }
 
-                        // Log messages for phase transitions etc.
                         if (gameState.gamePhase === 'playing' && oldGameStateForLog && Object.keys(oldGameStateForLog).length > 0) {
                             if (gameState.currentTableSuit !== oldGameStateForLog.currentTableSuit && gameState.currentTableSuit) {
                                 addLogMessage(`New Round! Table Suit is: ${SUIT_SYMBOLS[gameState.currentTableSuit]} (${gameState.currentTableSuit})`, "system");
                             }
-                            if (gameState.lastPlayedTurn && JSON.stringify(gameState.lastPlayedTurn) !== JSON.stringify(oldGameStateForLog.lastPlayedTurn)) { // Compare with oldGameStateForLog.lastPlayedTurn
+                            if (gameState.lastPlayedTurn && JSON.stringify(gameState.lastPlayedTurn) !== JSON.stringify(oldGameStateForLog.lastPlayedTurn)) { 
                                 addLogMessage(`${gameState.lastPlayedTurn.playerName} plays ${gameState.lastPlayedTurn.cardsPlayedCount} as ${SUIT_SYMBOLS[gameState.lastPlayedTurn.declaredSuit]}.`, "system");
                                 animatePlayedCards(gameState.lastPlayedTurn.playerId, gameState.lastPlayedTurn.cardsPlayedCount);
                             }
@@ -1284,37 +1230,30 @@
                             if(currPlayer) addLogMessage(`${currPlayer.name}'s turn.`, "system");
                         }
 
-                        // UI Transitions
-                        if (gameState.gamePhase === 'playing' && wasGameOver) { // Specifically handle transition from game_over to playing for rematch
+                        if (gameState.gamePhase === 'playing' && wasGameOver) { 
                             logDebug("Client: Rematch started! Transitioning UI.");
                             if (gameOverOverlay.classList.contains('visible')) {
-                                toggleModal(gameOverOverlay, false); // Explicitly hide game over modal
+                                toggleModal(gameOverOverlay, false); 
                             }
-                            showGameBoard(); // Ensure game board is primary view and calls updateFullUI
+                            showGameBoard(); 
                         } else if ((gameState.gamePhase !== 'lobby') && connectionSetupDiv.style.display !== 'none') {
-                            // Initial game start from connection setup
                             showGameBoard();
                         } else if (gameState.gamePhase === 'lobby' && gameBoardDiv.style.display !== 'none') {
-                            // Transitioning back to lobby (e.g. host exits)
                             showConnectionSetup();
                         }
                         
-                        // Always update the full UI if not in lobby setup (showGameBoard calls updateFullUI indirectly)
                         if (gameState.gamePhase !== 'lobby' && !(gameState.gamePhase === 'playing' && wasGameOver)) {
-                            // Avoid double updateFullUI if showGameBoard was called for rematch
                             updateFullUI();
                         }
 
-                        // Update rematch button text ONLY if we are STILL in game_over phase.
                         if (gameState.gamePhase === 'game_over') {
                             if (JSON.stringify(gameState.rematchReadyStatus) !== JSON.stringify(oldGameStateForLog?.rematchReadyStatus)) {
-                                updateRematchStatusDisplay(); // Update list of who is ready
+                                updateRematchStatusDisplay(); 
                                 localPlayer.readyForRematch = gameState.rematchReadyStatus[localPlayer.id] === true;
                                 playAgainBtn.textContent = localPlayer.readyForRematch ? "Waiting for Others..." : "Ready for Rematch";
                                 playAgainBtn.style.backgroundColor = localPlayer.readyForRematch ? 'var(--accent-green)' : 'var(--accent-gold)';
                             }
                         }
-
                         lastLoggedGameStateForClient = JSON.parse(JSON.stringify(gameState));
                         break;
                     case 'CHALLENGE_ROULETTE_RESULTS': 
@@ -1322,8 +1261,22 @@
                         lastLoggedGameStateForClient = JSON.parse(JSON.stringify(gameState)); 
                         break;
                     case 'GAME_OVER': handleClientGameOver(msg.payload); lastLoggedGameStateForClient = {}; break;
-                    case 'PLAYER_JOINED_ACK': clientStatusP.textContent = `Joined room! Waiting for the game to start...`; localPlayer.id = msg.payload.yourId; gameState.players = msg.payload.players; updatePlayerNameDisplay(); sendMessage('CLIENT_NAME_UPDATE', {name: localPlayer.name}); lastLoggedGameStateForClient = JSON.parse(JSON.stringify(gameState)); break;
-                    case 'HOST_DISCONNECTED': alert("Host disconnected. Returning to setup."); showConnectionSetup(); lastLoggedGameStateForClient = {}; break;
+                    case 'PLAYER_JOINED_ACK': 
+                        clientStatusP.textContent = `Joined room hosted by ${msg.payload.hostName}! Waiting for game...`;
+                        clientStatusP.style.color = "var(--accent-green)";
+                        // localPlayer.id is already set from client's peer.on('open')
+                        gameState.players = msg.payload.players; 
+                        // Ensure localPlayer object is updated based on the authoritative list from host
+                        const myInitialData = gameState.players.find(p => p.id === localPlayer.id);
+                        if (myInitialData) Object.assign(localPlayer, myInitialData);
+                        updatePlayerNameDisplay(); 
+                        lastLoggedGameStateForClient = JSON.parse(JSON.stringify(gameState)); 
+                        break;
+                    case 'HOST_DISCONNECTED': 
+                        alert("Host disconnected. Returning to setup."); 
+                        showConnectionSetup(); 
+                        lastLoggedGameStateForClient = {}; 
+                        break;
                 }
             }
         }
@@ -1332,22 +1285,19 @@
             if (!localPlayer.isHost) return;
             logDebug("Host: Initializing new game (standard deck).");
 
-            // 1. Get IDs of players who are still connected and were part of the last game.
-            //    gameState.players still holds the list of players from the game that just concluded.
             const playerIdsFromPreviousGame = gameState.players.map(p => p.id);
-            const connectedAndEligibleIds = getConnectedAndActivePlayerIds() // Uses dataChannels to check current connections
-                                              .filter(id => playerIdsFromPreviousGame.includes(id)); // Must have been in last game
+            const connectedAndEligibleIds = getConnectedAndActivePlayerIds() 
+                                              .filter(id => playerIdsFromPreviousGame.includes(id)); 
 
-            // 2. Create the new player list for the new game
             let newGamePlayersList = [];
-            gameState.players.forEach(oldPlayer => { // Iterate over players from previous game
+            gameState.players.forEach(oldPlayer => { 
                 if (connectedAndEligibleIds.includes(oldPlayer.id)) {
                     newGamePlayersList.push({
-                        id: oldPlayer.id,
+                        id: oldPlayer.id, 
                         name: oldPlayer.name,
                         isHost: oldPlayer.isHost,
-                        eliminated: false, // Reset for new game
-                        hand: [], // Will be dealt in startNewRound
+                        eliminated: false, 
+                        hand: [], 
                         revolverDeck: LiarsDeckGameManager.createRevolverDeck(),
                         revolverChambersLeft: REVOLVER_CHAMBERS,
                         cardCount: 0
@@ -1355,35 +1305,30 @@
                 }
             });
             
-            // Ensure host is present if they were somehow filtered out
             if (!newGamePlayersList.some(p => p.id === localPlayer.id)) {
-                newGamePlayersList.unshift({ // Add host to the beginning
+                newGamePlayersList.unshift({ 
                     id: localPlayer.id, name: localPlayer.name, isHost: true,
                     eliminated: false, hand: [], revolverDeck: LiarsDeckGameManager.createRevolverDeck(),
                     revolverChambersLeft: REVOLVER_CHAMBERS, cardCount: 0
                 });
-                // Deduplicate just in case (though logic should prevent double add)
                 newGamePlayersList = [...new Map(newGamePlayersList.map(item => [item.id, item])).values()];
             }
 
-            newGamePlayersList.sort((a, b) => { if (a.isHost) return -1; if (b.isHost) return 1; return a.id.localeCompare(b.id); });
-            gameState.players = newGamePlayersList; // Official player list for the new game
+            newGamePlayersList.sort((a, b) => { if (a.isHost) return -1; if (b.isHost) return 1; return 0; }); 
+            gameState.players = newGamePlayersList; 
 
-            // Reset other game state properties
-            gameState.rematchReadyStatus = {}; // Clear for the new game
+            gameState.rematchReadyStatus = {}; 
             gameState.liarsDeck = LiarsDeckGameManager.createLiarsDeck();
             gameState.tableDeck = LiarsDeckGameManager.createTableDeck();
             gameState.centerPile = [];
             gameState.centerPileCardCount = 0;
             gameState.lastPlayedTurn = null;
-            gameState.currentPlayerId = null; // Will be set in startNewRound
+            gameState.currentPlayerId = null; 
 
-            // Host hides its own modal. Clients will hide theirs upon receiving GAME_STATE_UPDATE.
             if (gameOverOverlay.classList.contains('visible')) {
                  toggleModal(gameOverOverlay, false);
             }
             
-            // Call startNewRound which will set gamePhase to 'playing' and then broadcast.
             startNewRound();
         }
 
@@ -1475,9 +1420,9 @@
             
             eligibleForRematchDisplay.forEach(playerId => {
                 const player = gameState.players.find(p => p.id === playerId);
-                if (player) { // Ensure player data exists
+                if (player) { 
                     const statusSpan = document.createElement('span');
-                    const isReady = gameState.rematchReadyStatus[playerId] === true; // Explicitly check for true
+                    const isReady = gameState.rematchReadyStatus[playerId] === true; 
                     statusSpan.textContent = `${player.name}: ${isReady ? 'Ready 👍' : 'Not Ready...'}`;
                     statusSpan.className = isReady ? 'ready' : 'not-ready';
                     rematchStatusListDiv.appendChild(statusSpan);
@@ -1487,15 +1432,14 @@
 
         function handleClientGameOver(data) {
             gameState.gamePhase = 'game_over';
-            gameState.rematchReadyStatus = {}; // Clear previous game's statuses completely
+            gameState.rematchReadyStatus = {}; 
             
-            // Initialize rematch status for all currently connected and eligible players to false
             const eligibleForRematchInit = getConnectedAndActivePlayerIds();
             eligibleForRematchInit.forEach(id => {
                 gameState.rematchReadyStatus[id] = false;
             });
 
-            localPlayer.readyForRematch = false; // Reset local player's button state
+            localPlayer.readyForRematch = false; 
 
             gameOverTitle.textContent = data.winner ? `👑 ${data.winner.name} Wins! 👑` : "Game Over!";
             gameOverMessageP.textContent = data.reason;
@@ -1508,8 +1452,8 @@
             updateRematchStatusDisplay();
             toggleModal(gameOverOverlay, true);
             toggleModal(challengeRouletteOverlay, false);
-            updateActionButtons(); // Disables in-game buttons
-            updateFullUI(); // Renders areas, which might show "eliminated" status more clearly etc.
+            updateActionButtons(); 
+            updateFullUI(); 
         }
 
         function broadcastGameState() { 
@@ -1520,12 +1464,11 @@
                 currentTableSuit: gameState.currentTableSuit, 
                 lastPlayedTurn: gameState.lastPlayedTurn ? { playerId:gameState.lastPlayedTurn.playerId,playerName:gameState.lastPlayedTurn.playerName,cardsPlayedCount:gameState.lastPlayedTurn.cardsPlayedCount,declaredSuit:gameState.lastPlayedTurn.declaredSuit}:null, 
                 gamePhase: gameState.gamePhase, 
-                roomName: gameState.roomName, 
                 centerPileCardCount: gameState.centerPile.length,
                 rematchReadyStatus: gameState.rematchReadyStatus 
             }; 
             gameState.players.forEach(p => { 
-                if (p.id !== localPlayer.id && dataChannels[p.id]?.readyState === 'open') { 
+                if (p.id !== localPlayer.id && hostConnections[p.id]?.open) { 
                     sendMessage('GAME_STATE_UPDATE', { gameState: { ...common }, yourHand: p.hand }, p.id); 
                 } 
             }); 
@@ -1533,15 +1476,48 @@
             if (myPData) Object.assign(localPlayer, myPData); 
             updateFullUI(); 
         }
-        function showConnectionSetup() { connectionSetupDiv.style.display = 'flex'; gameBoardDiv.style.display = 'none'; toggleModal(gameOverOverlay, false); toggleModal(challengeRouletteOverlay, false); hostControlsDiv.style.display = 'none'; clientControlsDiv.style.display = 'none'; hostConnectionSlotsDiv.innerHTML = ''; connectedPlayersCountSpan.textContent = '0'; connectedPlayersListDiv.innerHTML = ''; startGameBtn.disabled = true; hostOfferInput.value = ''; clientAnswerOutput.value = ''; clientStatusP.textContent = ''; const currentName = playerNameInput.value || localPlayer.name; localPlayer = { id: null, name: currentName, isHost: false, hand: [], eliminated: false, revolverDeck: [], revolverChambersLeft: REVOLVER_CHAMBERS, cardCount:0, readyForRematch: false }; if(currentName) playerNameInput.value = currentName; gameState = { players: [], liarsDeck: [], tableDeck: [], centerPile: [], currentPlayerId: null, currentTableSuit: null, lastPlayedTurn: null, gamePhase: 'lobby', roomName: null, config: { handSize: HAND_SIZE }, centerPileCardCount: 0, rematchReadyStatus: {} }; Object.values(peerConnections).forEach(pc => {if(pc?.close)pc.close();}); if(clientToServerPc?.close)clientToServerPc.close(); peerConnections = {}; clientToServerPc = null; dataChannels = {}; clientToServerDc = null; hostOfferInputs = {}; logDebug("UI reset to connection setup."); lastLoggedGameStateForClient = {}; logMessagesDiv.innerHTML = ''; localPlayerStatsArea.style.display = 'none';}
+        function showConnectionSetup() { 
+            connectionSetupDiv.style.display = 'flex'; 
+            gameBoardDiv.style.display = 'none'; 
+            toggleModal(gameOverOverlay, false); 
+            toggleModal(challengeRouletteOverlay, false); 
+            hostControlsDiv.style.display = 'none'; 
+            clientControlsDiv.style.display = 'none'; 
+            roomCodeDisplay.textContent = 'Waiting for Room Code...';
+            roomCodeInput.value = '';
+            connectedPlayersCountSpan.textContent = `0 / ${MAX_PLAYERS - 1}`; 
+            connectedPlayersListDiv.innerHTML = ''; 
+            startGameBtn.disabled = true; 
+            clientStatusP.textContent = 'Enter your name above, then the Room Code from the host and click "Connect to Host".';
+            clientStatusP.style.color = 'var(--secondary-text)';
+            
+            if (localPlayer.peer) {
+                localPlayer.peer.destroy(); 
+                localPlayer.peer = null;
+            }
+
+            const currentName = playerNameInput.value || localPlayer.name; 
+            localPlayer = { id: null, name: currentName, peer: null, isHost: false, hand: [], eliminated: false, revolverDeck: [], revolverChambersLeft: REVOLVER_CHAMBERS, cardCount:0, readyForRematch: false }; 
+            if(currentName) playerNameInput.value = currentName; 
+            
+            gameState = { players: [], liarsDeck: [], tableDeck: [], centerPile: [], currentPlayerId: null, currentTableSuit: null, lastPlayedTurn: null, gamePhase: 'lobby', config: { handSize: HAND_SIZE }, centerPileCardCount: 0, rematchReadyStatus: {} }; 
+            
+            hostConnections = {}; 
+            clientConnectionToHost = null; 
+            
+            logDebug("UI reset to connection setup."); 
+            lastLoggedGameStateForClient = {}; 
+            logMessagesDiv.innerHTML = ''; 
+            localPlayerStatsArea.style.display = 'none';
+        }
         
         function showGameBoard() {
             connectionSetupDiv.style.display = 'none';
             gameBoardDiv.style.display = 'block';
-            if (gameOverOverlay.classList.contains('visible')) { // Ensure game over modal is hidden
+            if (gameOverOverlay.classList.contains('visible')) { 
                 toggleModal(gameOverOverlay, false);
             }
-            if (challengeRouletteOverlay.classList.contains('visible')) { // Also hide challenge modal
+            if (challengeRouletteOverlay.classList.contains('visible')) { 
                 toggleModal(challengeRouletteOverlay, false);
             }
             updateFullUI();
@@ -1567,138 +1543,195 @@
 
         function updatePlayerNameDisplay() { playerNameInput.value = localPlayer.name; }
         
-        function setupHostSlot(sIdx) {
-            if (!hostOfferInputs[sIdx]?.slotDiv) {
-                const sD = document.createElement('div');
-                sD.className = 'connection-slot';
-                sD.id = `slot-${sIdx}`;
+        function initializePeerJSHost() {
+            if (localPlayer.peer) localPlayer.peer.destroy();
+            localPlayer.peer = new Peer();
 
-                const oL = document.createElement('p');
-                oL.textContent = `Client ${sIdx + 1} Offer (Share with them):`;
+            localPlayer.peer.on('open', (id) => {
+                localPlayer.id = id; 
+                roomCodeDisplay.textContent = id;
+                logDebug(`Host PeerJS ID (Room Code): ${id}`);
+                addLogMessage(`Room created! Share Code: ${id}`, "success");
+                clientStatusP.textContent = ""; 
 
-                const offerVisualContainer = document.createElement('div');
-                offerVisualContainer.className = 'textarea-container-visual'; 
+                gameState.players = [{
+                    id: localPlayer.id, name: localPlayer.name, isHost: true, eliminated: false, 
+                    hand: [], revolverDeck: [], revolverChambersLeft: REVOLVER_CHAMBERS, cardCount: 0
+                }];
+                updateConnectedPlayersDisplay();
+            });
 
-                const oT = document.createElement('textarea'); 
-                oT.readOnly = true;
-                oT.id = `hostOfferSdp-${sIdx}`;
-                oT.rows = 3; 
-                offerVisualContainer.appendChild(oT); 
+            localPlayer.peer.on('connection', (conn) => {
+                logDebug(`Host: Incoming connection from ${conn.peer}`);
+                if (Object.keys(hostConnections).length >= MAX_PLAYERS -1) {
+                    logDebug(`Host: Room full. Rejecting connection from ${conn.peer}`);
+                    conn.on('open', () => conn.send({ type: 'ROOM_FULL_REJECT' }) ); 
+                    setTimeout(() => conn.close(), 500); 
+                    return;
+                }
 
-                const copyOfferBtn = document.createElement('button');
-                copyOfferBtn.textContent = 'COPY'; 
-                copyOfferBtn.title = 'Copy Offer'; 
-                copyOfferBtn.className = 'copy-btn-internal'; 
-                copyOfferBtn.type = 'button';
-                copyOfferBtn.onclick = () => copyToClipboard(oT.value, copyOfferBtn);
-                offerVisualContainer.appendChild(copyOfferBtn); 
+                hostConnections[conn.peer] = conn;
 
-                const aL = document.createElement('p');
-                aL.textContent = `Client ${sIdx + 1} Answer (Paste from them):`;
-                const aT = document.createElement('textarea'); 
-                aT.id = `clientAnswerSdp-${sIdx}`;
-                aT.rows = 3;
-                // Apply general textarea styling for host's answer input
-                aT.style.width = 'calc(100% - 24px)';
-                aT.style.maxWidth = '500px';
-                aT.style.margin = '10px auto';
-                aT.style.padding = '12px';
-                aT.style.borderRadius = 'var(--border-radius)';
-                aT.style.border = '1px solid var(--input-border)';
-                aT.style.backgroundColor = 'var(--input-bg)';
-                aT.style.color = 'var(--input-text)';
-                aT.style.fontSize = '1em';
-                aT.style.fontFamily = 'var(--font-family)';
+                conn.on('open', () => {
+                    logDebug(`Host: DataConnection open with ${conn.peer}`);
+                    const newPlayer = { 
+                        id: conn.peer, 
+                        name: `Player ${Object.keys(hostConnections).length + 1}`, 
+                        isHost: false, eliminated: false, hand: [], 
+                        revolverDeck: [], revolverChambersLeft: REVOLVER_CHAMBERS, cardCount: 0 
+                    };
+                    gameState.players.push(newPlayer);
+                    updateConnectedPlayersDisplay();
 
+                    sendMessage('PLAYER_JOINED_ACK', { 
+                        yourId: conn.peer, 
+                        hostName: localPlayer.name,
+                        players: gameState.players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost, cardCount: p.cardCount }))
+                    }, conn.peer);
+                });
 
-                const cB = document.createElement('button');
-                cB.textContent = 'Process Answer';
+                conn.on('data', (data) => {
+                    handleIncomingMessage(data);
+                });
 
-                sD.appendChild(oL);
-                sD.appendChild(offerVisualContainer); 
-                sD.appendChild(aL);
-                sD.appendChild(aT);
-                sD.appendChild(cB);
-                hostConnectionSlotsDiv.appendChild(sD);
-                hostOfferInputs[sIdx] = { offerTextarea: oT, answerTextarea: aT, connectBtn: cB, slotDiv: sD, copyOfferBtn: copyOfferBtn };
-                cB.onclick = () => processClientAnswer(sIdx, aT.value);
-            } else {
-                hostOfferInputs[sIdx].offerTextarea.value = "Generating...";
-                hostOfferInputs[sIdx].answerTextarea.value = "";
-                hostOfferInputs[sIdx].answerTextarea.disabled = false;
-                hostOfferInputs[sIdx].connectBtn.disabled = false;
-                hostOfferInputs[sIdx].slotDiv.classList.remove('connected');
-            }
-            const cId = `client-${sIdx}`;
-            if (peerConnections[cId]) { peerConnections[cId].close(); delete peerConnections[cId]; }
-            if (dataChannels[cId]) delete dataChannels[cId];
-            const pc = new RTCPeerConnection(STUN_SERVERS);
-            peerConnections[cId] = pc;
-            const updOffTxt = () => { if (hostOfferInputs[sIdx]?.offerTextarea && pc.localDescription?.sdp) { try { hostOfferInputs[sIdx].offerTextarea.value = JSON.stringify(pc.localDescription); } catch (e) { hostOfferInputs[sIdx].offerTextarea.value = "Error stringify."; } } else if (hostOfferInputs[sIdx]?.offerTextarea.value.startsWith("Generating")) { hostOfferInputs[sIdx].offerTextarea.value = "Error: SDP not ready."; } };
-            pc.onicecandidate = e => { updOffTxt(); };
-            pc.oniceconnectionstatechange = () => { logDebug(`Host: ICE ${cId}: ${pc.iceConnectionState}`); if (['disconnected', 'failed', 'closed'].includes(pc.iceConnectionState) && peerConnections[cId] === pc) handleClientDisconnect(cId); };
-            const dc = pc.createDataChannel(`chat-${cId}`, { reliable: true });
-            dc.onopen = () => { 
-                logDebug(`Host: DC OPEN ${cId}`); 
-                dataChannels[cId] = dc; 
-                const nip = cId; 
-                let p = gameState.players.find(plr => plr.id === nip); 
-                if (!p) { p = { id: nip, name: `Player ${Object.keys(dataChannels).length + 1}`, isHost: false, eliminated: false, hand: [], revolverDeck: [], revolverChambersLeft: REVOLVER_CHAMBERS, cardCount: 0 }; gameState.players.push(p); } 
-                else p.name = `Player ${Object.keys(dataChannels).length + 1}`; 
-                updateConnectedPlayersDisplay(); 
-                sendMessage('PLAYER_JOINED_ACK', { yourId: nip, hostName: localPlayer.name, players: gameState.players.map(pl => ({ id: pl.id, name: pl.name, isHost: pl.isHost, cardCount: pl.cardCount })) }, nip); 
-                hostOfferInputs[sIdx].connectBtn.disabled = true; 
-                hostOfferInputs[sIdx].answerTextarea.disabled = true; 
-                hostOfferInputs[sIdx].slotDiv.classList.add('connected'); 
-            };
-            dc.onmessage = handleIncomingMessage; dc.onclose = () => { logDebug(`Host: DC CLOSE ${cId}`); if (dataChannels[cId] === dc) handleClientDisconnect(cId); }; dc.onerror = err => logDebug(`Host: DC error ${cId}: ${err}`); pc.createOffer().then(off => pc.setLocalDescription(off)).then(updOffTxt).catch(e => { if (hostOfferInputs[sIdx]?.offerTextarea) hostOfferInputs[sIdx].offerTextarea.value = `Error offer: ${e.message}`; });
+                conn.on('close', () => {
+                    logDebug(`Host: Connection with ${conn.peer} closed.`);
+                    handleClientDisconnect(conn.peer);
+                });
+                conn.on('error', (err) => {
+                    logDebug(`Host: Error with connection ${conn.peer}: ${err}`);
+                    handleClientDisconnect(conn.peer); 
+                });
+            });
+
+            localPlayer.peer.on('disconnected', () => {
+                logDebug("Host: Disconnected from PeerJS server. Attempting to reconnect...");
+                clientStatusP.textContent = "Lost connection to signaling server. Reconnecting...";
+                clientStatusP.style.color = "var(--accent-red)";
+                if (localPlayer.peer && !localPlayer.peer.destroyed) localPlayer.peer.reconnect();
+            });
+            localPlayer.peer.on('error', (err) => {
+                logDebug(`Host: PeerJS error: ${err.type} - ${err}`);
+                roomCodeDisplay.textContent = 'Error connecting to PeerServer';
+                if (err.type === 'unavailable-id') {
+                    alert("Error: The chosen Room ID is already in use. Please try creating the room again, a new ID will be generated.");
+                    showConnectionSetup();
+                } else if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error' || err.type === 'socket-closed') {
+                     clientStatusP.textContent = "Error connecting to PeerJS server. Check connection or try refreshing.";
+                     clientStatusP.style.color = "var(--accent-red)";
+                } else {
+                    clientStatusP.textContent = `Connection error: ${err.type}. Try refreshing.`;
+                    clientStatusP.style.color = "var(--accent-red)";
+                }
+            });
         }
 
-        function processClientAnswer(sIdx,ansSdpStr){const cid=`client-${sIdx}`;const pc=peerConnections[cid];if(!pc||pc.signalingState==="closed"){logDebug(`Host: PC ${cid} invalid.`);return;}try{const ans=JSON.parse(ansSdpStr);pc.setRemoteDescription(new RTCSessionDescription(ans)).catch(e=>logDebug(`Host: Error setRemoteDesc ${cid}: ${e}`));}catch(e){alert("Invalid Answer SDP. Make sure it's copied correctly.");}}
-        
-        function handleClientDisconnect(cId){
-            logDebug(`Host: Client ${gameState.players.find(p=>p.id===cId)?.name||cId} disconnect.`);
-            const dP = gameState.players.find(p=>p.id===cId);
+        function connectToPeerJSClient(hostPeerId) {
+            if (localPlayer.peer) localPlayer.peer.destroy();
+            localPlayer.peer = new Peer();
 
-            // Close and delete peer connection and data channel first
-            if(peerConnections[cId]){peerConnections[cId].close();delete peerConnections[cId];}
-            if(dataChannels[cId])delete dataChannels[cId]; // This makes them ineligible in getConnectedAndActivePlayerIds
+            localPlayer.peer.on('open', (id) => {
+                localPlayer.id = id; 
+                logDebug(`Client PeerJS ID: ${id}. Attempting to connect to host: ${hostPeerId}`);
+                
+                const conn = localPlayer.peer.connect(hostPeerId, {reliable: true});
+                clientConnectionToHost = conn;
 
-            let gameLogicChanged = false; // Flag to determine if a broadcast is needed if game doesn't end/restart
+                conn.on('open', () => {
+                    logDebug(`Client: DataConnection open with host ${conn.peer}`);
+                    clientStatusP.textContent = `Connected to host! Waiting for acknowledgement...`;
+                    clientStatusP.style.color = "var(--accent-green)";
+                    sendMessage('CLIENT_NAME_UPDATE', { name: localPlayer.name });
+                });
+
+                conn.on('data', (data) => {
+                    if (data.type === 'ROOM_FULL_REJECT') {
+                        alert("Host's room is full. Cannot join.");
+                        showConnectionSetup();
+                        return;
+                    }
+                    handleIncomingMessage(data);
+                });
+
+                conn.on('close', () => {
+                    logDebug(`Client: Connection with host ${conn.peer} closed.`);
+                    clientStatusP.textContent = "Disconnected from host.";
+                    clientStatusP.style.color = "var(--accent-red)";
+                    if (gameState.gamePhase !== 'game_over' && gameState.gamePhase !== 'lobby') {
+                         alert("Lost connection to the host.");
+                         showConnectionSetup();
+                    }
+                });
+                conn.on('error', (err) => {
+                    logDebug(`Client: Error with host connection ${conn.peer}: ${err}`);
+                    clientStatusP.textContent = `Error connecting to host: ${err.type}.`;
+                    clientStatusP.style.color = "var(--accent-red)";
+                });
+            });
+
+            localPlayer.peer.on('disconnected', () => {
+                logDebug("Client: Disconnected from PeerJS server. Attempting to reconnect...");
+                 clientStatusP.textContent = "Lost connection to signaling server. Reconnecting...";
+                 clientStatusP.style.color = "var(--accent-red)";
+                if (localPlayer.peer && !localPlayer.peer.destroyed) localPlayer.peer.reconnect();
+            });
+            localPlayer.peer.on('error', (err) => {
+                logDebug(`Client: PeerJS error: ${err.type} - ${err}`);
+                 if (err.type === 'peer-unavailable') {
+                    clientStatusP.textContent = `Host (${hostPeerId}) not found. Check Room Code and that host is active.`;
+                    clientStatusP.style.color = "var(--accent-red)";
+                } else if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error' || err.type === 'socket-closed') {
+                     clientStatusP.textContent = "Error connecting to PeerJS server. Check connection or try refreshing.";
+                     clientStatusP.style.color = "var(--accent-red)";
+                } else {
+                    clientStatusP.textContent = `Connection error: ${err.type}. Try refreshing.`;
+                    clientStatusP.style.color = "var(--accent-red)";
+                }
+            });
+        }
+
+        function handleClientDisconnect(clientId){ 
+            logDebug(`Host: Client ${gameState.players.find(p=>p.id===clientId)?.name||clientId} disconnect processing.`);
+            
+            if(hostConnections[clientId]){
+                if (hostConnections[clientId].close) hostConnections[clientId].close(); 
+                delete hostConnections[clientId];
+            }
+
+            const dP = gameState.players.find(p=>p.id===clientId);
+            let gameLogicChanged = false;
 
             if(dP){
                 if (gameState.gamePhase === 'game_over') {
                     let statusActuallyChanged = false;
-                    if (gameState.rematchReadyStatus.hasOwnProperty(cId)) {
-                        delete gameState.rematchReadyStatus[cId];
-                        statusActuallyChanged = true; // Vote was removed
+                    if (gameState.rematchReadyStatus.hasOwnProperty(clientId)) {
+                        delete gameState.rematchReadyStatus[clientId];
+                        statusActuallyChanged = true; 
                     }
-                    // The fact that a player disconnected means the pool of eligible players for rematch effectively changed.
-                    addLogMessage(`${dP.name} disconnected. No longer part of rematch consideration.`, "system");
-                    statusActuallyChanged = true; // Mark that the set of who *can* rematch has changed
+                    addLogMessage(`${dP.name} disconnected. No longer part of rematch.`, "system");
+                    statusActuallyChanged = true; 
 
-                    const eligibleRematchPlayers = getConnectedAndActivePlayerIds(); // Will be smaller now, excluding cId
+                    const eligibleRematchPlayers = getConnectedAndActivePlayerIds(); 
                     const allActuallyReady = eligibleRematchPlayers.length > 0 &&
                                              eligibleRematchPlayers.every(id => gameState.rematchReadyStatus[id] === true);
 
                     if (eligibleRematchPlayers.length >= MIN_PLAYERS && allActuallyReady) {
                         addLogMessage("All remaining players ready! Starting rematch...", "success");
-                        initializeNewGame(); // This will broadcast the new game state
-                    } else if (statusActuallyChanged) { // If game didn't restart but status/eligibility changed
-                         broadcastGameState(); // Update clients about the disconnection and new rematch eligibility
+                        initializeNewGame(); 
+                    } else if (statusActuallyChanged) { 
+                         broadcastGameState(); 
                     }
-                    // gameLogicChanged is effectively handled by statusActuallyChanged for this block
                 } else if (!dP.eliminated && ['playing','challenge_reveal','roulette','roulette_resolved'].includes(gameState.gamePhase)){
                     dP.eliminated=true; dP.cardCount=0; addLogMessage(`${dP.name} disconnected & was eliminated.`, "system"); gameLogicChanged=true;
                     const unelim=gameState.players.filter(p=>!p.eliminated);
-                    if(unelim.length<=1 && gameState.gamePhase!=='game_over'){ // Check if game should end
+                    if(unelim.length<=1 && gameState.gamePhase!=='game_over'){ 
                         gameState.gamePhase='game_over';
                         const winner=unelim.length===1?unelim[0]:null;
                         const goD={winner:winner?{id:winner.id,name:winner.name}:null,reason:winner?`${winner.name} wins by default (opponent disconnected)!`:"Game ended due to disconnections."};
-                        sendMessage('GAME_OVER',goD); // This will trigger GAME_OVER on host too via handleClientGameOver
-                        // handleClientGameOver will then set up rematch state correctly
-                    } else if(gameState.gamePhase!=='game_over' && gameState.currentPlayerId===cId){ // Pass turn if current player
-                        let cpi=gameState.players.findIndex(p=>p.id===cId);
+                        sendMessage('GAME_OVER',goD);
+                        handleClientGameOver(goD); 
+                    } else if(gameState.gamePhase!=='game_over' && gameState.currentPlayerId===clientId){ 
+                        let cpi=gameState.players.findIndex(p=>p.id===clientId);
                         let att=0;let nextF=false;
                         if(gameState.players.length>0){
                             do {cpi=(cpi+1)%gameState.players.length;att++;if(!gameState.players[cpi].eliminated){nextF=true;break;}}
@@ -1706,53 +1739,116 @@
                         }
                         if(nextF){gameState.currentPlayerId=gameState.players[cpi].id;addLogMessage(`Turn passed to ${gameState.players.find(p=>p.id===gameState.currentPlayerId)?.name}.`,"system");}
                         else logDebug("Disconnect: No next player found.");
-                        // gameLogicChanged is true, so broadcast will happen below if not game_over
                     }
-                    // If gameLogicChanged and not game_over phase yet, broadcast will be handled outside this 'if (dP)'
                 } else if(gameState.gamePhase==='lobby'){
-                    gameState.players=gameState.players.filter(p=>p.id!==cId);
+                    gameState.players=gameState.players.filter(p=>p.id!==clientId);
                     gameLogicChanged=true;
-                    // Broadcast for lobby will be handled outside 'if (dP)'
                 }
-            } // end if(dP)
+            } 
 
-            updateConnectedPlayersDisplay(); // For host's lobby UI slots
-            const sIdxStr=cId.split('-')[1];
-            if(localPlayer.isHost&&sIdxStr&&!isNaN(parseInt(sIdxStr))){
-                const sIdx=parseInt(sIdxStr);
-                logDebug(`Host: Reset slot ${sIdx} for ${cId}.`);
-                if(hostOfferInputs[sIdx]?.slotDiv)hostOfferInputs[sIdx].slotDiv.classList.remove('connected');
-                setupHostSlot(sIdx); // Re-initialize the slot for a new connection
-            }
+            updateConnectedPlayersDisplay(); 
 
-            // General broadcast if game logic changed and not handled by a phase transition (like to game_over or new_game)
-            if(gameLogicChanged && gameState.gamePhase !== 'game_over' && gameState.gamePhase !== 'playing_starting_new_round') { // playing_starting_new_round is hypothetical name for during initializeNewGame
-                 // Check if not already handled by initializeNewGame or similar state transitions from above
-                if(!(gameState.gamePhase === 'game_over' && dP && (gameState.players.filter(p=>!p.eliminated).length <=1) )) { // if not already handled by game ending
-                     if (gameState.gamePhase !== 'lobby' || (gameState.gamePhase === 'lobby' && dP)) { // broadcast for lobby only if a player was actually removed
+            if(gameLogicChanged && gameState.gamePhase !== 'game_over' && gameState.gamePhase !== 'playing_starting_new_round') { 
+                if(!(gameState.gamePhase === 'game_over' && dP && (gameState.players.filter(p=>!p.eliminated).length <=1) )) { 
+                     if (gameState.gamePhase !== 'lobby' || (gameState.gamePhase === 'lobby' && dP)) { 
                         broadcastGameState();
                      }
                 }
             }
         }
 
-        function updateConnectedPlayersDisplay(){const openDCIds=Object.keys(dataChannels).filter(id=>dataChannels[id]?.readyState==='open');const dispPs=gameState.players.filter(p=>p.isHost||openDCIds.includes(p.id));connectedPlayersCountSpan.textContent=`${dispPs.length-(localPlayer.isHost?1:0)} / ${MAX_PLAYERS-1}`;connectedPlayersListDiv.innerHTML='';dispPs.filter(p => !p.isHost).forEach(p=>{const s=document.createElement('span');s.textContent=p.name;connectedPlayersListDiv.appendChild(s);});if(localPlayer.isHost){ const hostSpan = document.createElement('span'); hostSpan.textContent = `${localPlayer.name} (Host)`; hostSpan.style.fontWeight = 'bold'; connectedPlayersListDiv.prepend(hostSpan); }startGameBtn.disabled=!(dispPs.length>=MIN_PLAYERS&&dispPs.length<=MAX_PLAYERS);}
-        function clientGenerateAnswer(){const offS=hostOfferInput.value;if(!offS){alert("Please paste the Host's Offer code first.");return;}if(clientToServerPc&&clientToServerPc.signalingState!=="closed"){clientToServerPc.close();clientToServerPc=null;}clientToServerPc=new RTCPeerConnection(STUN_SERVERS);const updAnsTxt=()=>{if(clientToServerPc.localDescription?.sdp){try{clientAnswerOutput.value=JSON.stringify(clientToServerPc.localDescription);}catch(e){clientAnswerOutput.value="Error stringifying Answer SDP.";}}};clientToServerPc.onicecandidate=e=>{updAnsTxt();};clientToServerPc.oniceconnectionstatechange=()=>{logDebug(`Client: ICE state: ${clientToServerPc.iceConnectionState}`); if(clientToServerPc.iceConnectionState==='connected'){clientStatusP.textContent="Successfully connected to Host! Waiting for game...";clientStatusP.style.color='var(--accent-green)';}if(['disconnected','failed','closed'].includes(clientToServerPc.iceConnectionState)){clientStatusP.textContent="Disconnected from Host.";clientStatusP.style.color='var(--accent-red)';if(clientToServerPc.iceConnectionState!=='closed' && gameState.gamePhase !== 'game_over' && gameState.gamePhase !== 'lobby' ){showConnectionSetup();}}};clientToServerPc.ondatachannel=e=>{clientToServerDc=e.channel;clientToServerDc.onmessage=handleIncomingMessage;clientToServerDc.onopen=()=>{logDebug("Client: Data Channel OPEN.");clientStatusP.textContent="Data channel open. Ready!";};clientToServerDc.onclose=()=>{clientStatusP.textContent="Data channel closed by Host.";clientStatusP.style.color='var(--accent-red)';if(gameState.gamePhase !== 'game_over' && gameState.gamePhase !== 'lobby') showConnectionSetup();};};try{const off=JSON.parse(offS);clientToServerPc.setRemoteDescription(new RTCSessionDescription(off)).then(()=>clientToServerPc.createAnswer()).then(ans=>clientToServerPc.setLocalDescription(ans)).then(()=>{updAnsTxt();clientStatusP.textContent="Answer generated. Copy it and send to the Host.";clientStatusP.style.color='var(--accent-highlight)';}).catch(e=>{clientStatusP.textContent=`Error generating answer: ${e.message}`;clientStatusP.style.color='var(--accent-red-darker)';logDebug(`Client answer error: ${e}`);});}catch(e){alert("Invalid Host Offer SDP. Please ensure it's copied correctly.");clientStatusP.textContent="Error: Invalid Offer format.";clientStatusP.style.color='var(--accent-red-darker)';}}
+        function updateConnectedPlayersDisplay(){
+            const openConnectionsCount = Object.values(hostConnections).filter(conn => conn?.open).length;
+            connectedPlayersCountSpan.textContent = `${openConnectionsCount} / ${MAX_PLAYERS - 1}`;
+            
+            connectedPlayersListDiv.innerHTML = '';
+            if (localPlayer.isHost && gameState.players.find(p => p.id === localPlayer.id)) { 
+                 const hostSpan = document.createElement('span'); 
+                 hostSpan.textContent = `${localPlayer.name} (Host)`; 
+                 hostSpan.style.fontWeight = 'bold'; 
+                 connectedPlayersListDiv.appendChild(hostSpan); 
+            }
+
+            gameState.players.filter(p => !p.isHost && hostConnections[p.id]?.open).forEach(p=>{
+                const s=document.createElement('span');
+                s.textContent = p.name;
+                connectedPlayersListDiv.appendChild(s);
+            });
+            
+            const totalPlayersInGame = gameState.players.filter(p => p.isHost || hostConnections[p.id]?.open).length;
+            startGameBtn.disabled = !(totalPlayersInGame >= MIN_PLAYERS && totalPlayersInGame <= MAX_PLAYERS);
+        }
+        
         function handleHandCardClickForPlay(event){const cE=event.currentTarget;const cId=cE.dataset.cardId;const idx=selectedCardsForPlayUI.findIndex(c=>c.id===cId);if(idx>-1){selectedCardsForPlayUI.splice(idx,1);cE.classList.remove('selected-for-play');}else{if(selectedCardsForPlayUI.length<3){const cardInH=localPlayer.hand.find(c=>c.id===cId);if(cardInH){selectedCardsForPlayUI.push(cardInH);cE.classList.add('selected-for-play');}}else addLogMessage("Max 3 cards can be selected.", "error");}updatePlayConfirmArea();}
         function updatePlayConfirmArea(){if(selectedCardsForPlayUI.length>0&&gameState.currentTableSuit){playConfirmText.textContent=`Play ${selectedCardsForPlayUI.length} card${selectedCardsForPlayUI.length > 1 ? 's' : ''} as ${SUIT_SYMBOLS[gameState.currentTableSuit]}?`;playConfirmArea.style.display='block';}else playConfirmArea.style.display='none';}
         function enableHandCardSelectionForPlay(enable){const hCs=playerHandArea.querySelectorAll('.card-container');if(enable){selectedCardsForPlayUI=[];playerHandArea.classList.add('card-selection-active');playerHandArea.classList.remove('current-player-hand'); hCs.forEach(c=>{c.classList.remove('selected-for-play');c.addEventListener('click',handleHandCardClickForPlay);});playCardsBtn.disabled=true;callLiarBtn.disabled=true;updatePlayConfirmArea();}else{playerHandArea.classList.remove('card-selection-active');if(gameState.currentPlayerId === localPlayer.id && !localPlayer.eliminated) playerHandArea.classList.add('current-player-hand');hCs.forEach(c=>{c.classList.remove('selected-for-play');c.removeEventListener('click',handleHandCardClickForPlay);});playConfirmArea.style.display='none';selectedCardsForPlayUI=[];updateActionButtons();}}
         
         function init() { 
-            createRoomBtn.onclick=()=>{localPlayer.name=playerNameInput.value.trim();if(localPlayer.name.length<3){alert("Name must be at least 3 characters long.");return;}localPlayer.isHost=true;localPlayer.id=generateId("host_");gameState.roomName=`${localPlayer.name}'s Game (${generateId().substring(0,4)})`; gameState.players=[{id:localPlayer.id,name:localPlayer.name,isHost:true,eliminated:false,hand:[],revolverDeck:[],revolverChambersLeft:REVOLVER_CHAMBERS,cardCount:0}];updatePlayerNameDisplay();hostControlsDiv.style.display='block';clientControlsDiv.style.display='none';hostConnectionSlotsDiv.innerHTML='';hostOfferInputs={};for(let i=0;i<MAX_PLAYERS-1;i++)setupHostSlot(i);updateConnectedPlayersDisplay();logDebug(`Host ${localPlayer.name} created room (debug: ${gameState.roomName})`);addLogMessage("Room created. Waiting for players...", "system");}; 
-            joinRoomBtn.onclick=()=>{localPlayer.name=playerNameInput.value.trim();if(localPlayer.name.length<3){alert("Name must be at least 3 characters long.");return;}localPlayer.isHost=false;updatePlayerNameDisplay();hostControlsDiv.style.display='none';clientControlsDiv.style.display='block';logDebug(`Player ${localPlayer.name} attempting to join a room.`);clientStatusP.textContent="Ready to join. Paste Host Offer and Generate Answer."; clientStatusP.style.color = "var(--secondary-text)";}; 
+            createRoomBtn.onclick=()=>{
+                localPlayer.name=playerNameInput.value.trim();
+                if(localPlayer.name.length<3){alert("Name must be at least 3 characters long.");return;}
+                localPlayer.isHost=true;
+                updatePlayerNameDisplay();
+                hostControlsDiv.style.display='block';
+                clientControlsDiv.style.display='none';
+                roomCodeDisplay.textContent = 'Connecting to PeerServer...';
+                clientStatusP.textContent = ""; 
+                initializePeerJSHost();
+                logDebug(`Host ${localPlayer.name} creating room...`);
+            }; 
             
-            const copyClientAnswerBtn = $('#copyClientAnswerBtn');
-            if (copyClientAnswerBtn) {
-                copyClientAnswerBtn.onclick = () => copyToClipboard(clientAnswerOutput.value, copyClientAnswerBtn);
-            }
+            joinRoomBtn.onclick=()=>{
+                localPlayer.name=playerNameInput.value.trim();
+                if(localPlayer.name.length<3){alert("Name must be at least 3 characters long.");return;}
+                localPlayer.isHost=false;
+                updatePlayerNameDisplay();
+                hostControlsDiv.style.display='none';
+                clientControlsDiv.style.display='block';
+                clientStatusP.textContent = "Enter the Host's Room Code and click 'Connect to Host'.";
+                clientStatusP.style.color = "var(--secondary-text)";
+                roomCodeInput.focus();
+            }; 
 
-            generateAnswerBtn.onclick=clientGenerateAnswer; 
-            startGameBtn.onclick=()=>{if(localPlayer.isHost){const connPs=gameState.players.filter(p=>p.isHost||(dataChannels[p.id]?.readyState==='open'));if(connPs.length<MIN_PLAYERS){alert(`Need at least ${MIN_PLAYERS} players to start. Currently have ${connPs.length}.`);return;}logDebug("Host starting game (standard deck)...");addLogMessage("Game starting!", "success");initializeNewGame();showGameBoard();}}; 
+            connectToHostBtn.onclick=()=>{
+                if(localPlayer.name.length<3){ 
+                    alert("Please ensure your name is entered (Min 3 chars).");
+                    playerNameInput.focus();
+                    return;
+                }
+                const hostIdToJoin = roomCodeInput.value.trim();
+                if(!hostIdToJoin){alert("Please enter the Host's Room Code."); roomCodeInput.focus(); return;}
+
+                clientStatusP.textContent = `Attempting to connect to host: ${hostIdToJoin}...`;
+                clientStatusP.style.color = "var(--accent-highlight)";
+                connectToPeerJSClient(hostIdToJoin);
+                logDebug(`Player ${localPlayer.name} attempting to join room: ${hostIdToJoin}`);
+            };
+            
+            if (copyRoomCodeBtn) {
+                copyRoomCodeBtn.onclick = () => {
+                    const roomCode = roomCodeDisplay.textContent;
+                    if (roomCode && !roomCode.startsWith("Waiting") && !roomCode.startsWith("Connecting") && !roomCode.startsWith("Error")) {
+                        copyToClipboard(roomCode, copyRoomCodeBtn); 
+                    } else {
+                        alert("Room Code not available yet.");
+                    }
+                };
+            }
+            
+            startGameBtn.onclick=()=>{
+                if(localPlayer.isHost){
+                    const connectedPlayerCount = Object.values(hostConnections).filter(conn => conn?.open).length + 1; 
+                    if(connectedPlayerCount < MIN_PLAYERS){
+                        alert(`Need at least ${MIN_PLAYERS} players to start. Currently have ${connectedPlayerCount}.`);
+                        return;
+                    }
+                    logDebug("Host starting game (standard deck)...");
+                    addLogMessage("Game starting!", "success");
+                    initializeNewGame(); 
+                    showGameBoard();
+                }
+            }; 
+
             playCardsBtn.onclick=()=>{enableHandCardSelectionForPlay(true);}; 
             confirmPlayBtn.onclick=()=>{if(selectedCardsForPlayUI.length>0&&selectedCardsForPlayUI.length<=3){const cIds=selectedCardsForPlayUI.map(c=>c.id);if(localPlayer.isHost)handleHostPlayerPlayCards(localPlayer.id,cIds);else sendMessage('PLAYER_ACTION_PLAY_CARDS',{cards:cIds});enableHandCardSelectionForPlay(false);}else alert("Please select 1 to 3 cards to play.");}; 
             cancelPlayBtn.onclick=()=>{enableHandCardSelectionForPlay(false);}; 
@@ -1767,7 +1863,7 @@
 
                 if (localPlayer.isHost) {
                     gameState.rematchReadyStatus[localPlayer.id] = localPlayer.readyForRematch;
-                    updateRematchStatusDisplay(); // Host updates its own display immediately
+                    updateRematchStatusDisplay(); 
 
                     const eligiblePlayers = getConnectedAndActivePlayerIds();
                     const allActuallyReady = eligiblePlayers.length > 0 &&
@@ -1775,26 +1871,38 @@
 
                     if (eligiblePlayers.length >= MIN_PLAYERS && allActuallyReady) {
                         addLogMessage("All players ready! Starting rematch...", "success");
-                        initializeNewGame(); // This will broadcast the new game state
+                        initializeNewGame(); 
                     } else {
-                        // Game not starting yet, or not enough players.
-                        // Broadcast the current state of rematch readiness.
                         broadcastGameState();
                     }
-                } else { // Client
+                } else { 
                     sendMessage('PLAYER_TOGGLE_REMATCH_READY', { isReady: localPlayer.readyForRematch });
                 }
             }; 
 
-            exitGameBtn.onclick=()=>{if(localPlayer.isHost&&Object.keys(dataChannels).length>0)sendMessage('HOST_DISCONNECTED',{message:"Host ended game and exited."});addLogMessage("Exiting game to setup screen.", "system");showConnectionSetup();}; 
+            exitGameBtn.onclick=()=>{
+                if(localPlayer.isHost && Object.keys(hostConnections).length > 0) {
+                    sendMessage('HOST_DISCONNECTED',{message:"Host ended game and exited."});
+                }
+                addLogMessage("Exiting game to setup screen.", "system");
+                showConnectionSetup(); 
+            }; 
+
             document.addEventListener('keydown',e=>{const modalVis=Array.from(document.querySelectorAll('.modal')).some(m=>m.classList.contains('visible'));const inputFoc=['INPUT','TEXTAREA'].includes(document.activeElement.tagName);if(modalVis||inputFoc||connectionSetupDiv.style.display!=='none')return;if(e.key.toUpperCase()==='P'&&!playCardsBtn.disabled&&playConfirmArea.style.display==='none'){e.preventDefault();playCardsBtn.click();}if(e.key.toUpperCase()==='L'&&!callLiarBtn.disabled&&playConfirmArea.style.display==='none'){e.preventDefault();callLiarBtn.click();}}); 
             
             const debouncedRender = debounce(updateFullUI, 250);
             window.addEventListener('resize', debouncedRender);
             
-            window.addEventListener('beforeunload',()=>{if(localPlayer.isHost&&gameState.gamePhase!=='lobby'&&Object.keys(dataChannels).length>0)sendMessage('HOST_DISCONNECTED',{message:"Host has left the page."});Object.values(peerConnections).forEach(pc=>{if(pc?.close)pc.close();});if(clientToServerPc?.close)clientToServerPc.close();}); 
+            window.addEventListener('beforeunload',()=>{
+                if(localPlayer.isHost && gameState.gamePhase!=='lobby' && Object.keys(hostConnections).length > 0){
+                    sendMessage('HOST_DISCONNECTED',{message:"Host has left the page."});
+                }
+                if (localPlayer.peer && !localPlayer.peer.destroyed) { 
+                    localPlayer.peer.destroy();
+                }
+            }); 
             showConnectionSetup(); 
-            logDebug("E-Money's Bar initialized.");
+            logDebug("E-Money's Bar initialized with PeerJS.");
         }
         document.addEventListener('DOMContentLoaded', init);
     </script>
