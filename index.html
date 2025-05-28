@@ -901,17 +901,22 @@
                     rotate: '0deg'
                 });
             } else if (numOpponents === 2) { 
-                layoutSlots.push({ 
-                    top: `${topPlayerCenterCssTopVal}px`, left: '50%',
-                    translateX: '-50%', translateY: '-50%', 
-                    rotate: '0deg'
-                });
+                // MODIFIED SECTION FOR 2 OPPONENTS
+                // Slot for the left side
                 layoutSlots.push({ 
                     top: `50%`, 
                     left: `${ctLeftRel - sidePlayerHorizontalGap - playerAreaWidthEstimate}px`,
                     translateX: '0%', translateY: '-50%', 
                     rotate: '0deg'
                 });
+                // Slot for the right side
+                layoutSlots.push({ 
+                    top: `50%`,
+                    left: `${ctRightRel + sidePlayerHorizontalGap}px`, 
+                    translateX: '0%', translateY: '-50%', 
+                    rotate: '0deg'
+                });
+                // END OF MODIFIED SECTION
             } else if (numOpponents === 3) { 
                  layoutSlots.push({ 
                     top: `50%`,
